@@ -168,12 +168,6 @@ var app = (function () {
             node.parentNode.removeChild(node);
         }
     }
-    function destroy_each(iterations, detaching) {
-        for (let i = 0; i < iterations.length; i += 1) {
-            if (iterations[i])
-                iterations[i].d(detaching);
-        }
-    }
     function element(name) {
         return document.createElement(name);
     }
@@ -598,6 +592,11 @@ var app = (function () {
                 }
             }
         };
+    }
+
+    function destroy_block(block, lookup) {
+        block.d(1);
+        lookup.delete(block.key);
     }
     function outro_and_destroy_block(block, lookup) {
         transition_out(block, 1, 1, () => {
@@ -1316,24 +1315,27 @@ var app = (function () {
 
     function get_each_context$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[4] = list[i];
+    	child_ctx[3] = list[i];
+    	child_ctx[5] = i;
     	return child_ctx;
     }
 
-    // (16:0) {#each selectInputs as si }
-    function create_each_block$1(ctx) {
+    // (16:0) {#each Array(ratingCount) as _, i (i)}
+    function create_each_block$1(key_1, ctx) {
     	let li;
     	let input;
     	let input_checked_value;
     	let t0;
     	let label;
-    	let t1_value = /*si*/ ctx[4] + "";
+    	let t1_value = /*i*/ ctx[5] + 1 + "";
     	let t1;
     	let t2;
     	let mounted;
     	let dispose;
 
     	const block = {
+    		key: key_1,
+    		first: null,
     		c: function create() {
     			li = element("li");
     			input = element("input");
@@ -1342,17 +1344,18 @@ var app = (function () {
     			t1 = text(t1_value);
     			t2 = space();
     			attr_dev(input, "type", "radio");
-    			attr_dev(input, "id", "num" + /*si*/ ctx[4]);
+    			attr_dev(input, "id", "num" + (/*i*/ ctx[5] + 1));
     			attr_dev(input, "name", "rating");
-    			input.value = /*si*/ ctx[4];
-    			input.checked = input_checked_value = /*selected*/ ctx[0] === /*si*/ ctx[4];
+    			input.value = /*i*/ ctx[5] + 1;
+    			input.checked = input_checked_value = /*selected*/ ctx[0] === /*i*/ ctx[5] + 1;
     			attr_dev(input, "class", "svelte-1ua1t9j");
-    			add_location(input, file$5, 17, 2, 351);
-    			attr_dev(label, "for", "num" + /*si*/ ctx[4]);
+    			add_location(input, file$5, 17, 2, 334);
+    			attr_dev(label, "for", "num" + (/*i*/ ctx[5] + 1));
     			attr_dev(label, "class", "svelte-1ua1t9j");
-    			add_location(label, file$5, 18, 2, 459);
+    			add_location(label, file$5, 18, 2, 451);
     			attr_dev(li, "class", "svelte-1ua1t9j");
-    			add_location(li, file$5, 16, 0, 344);
+    			add_location(li, file$5, 16, 0, 327);
+    			this.first = li;
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, li, anchor);
@@ -1367,8 +1370,10 @@ var app = (function () {
     				mounted = true;
     			}
     		},
-    		p: function update(ctx, dirty) {
-    			if (dirty & /*selected*/ 1 && input_checked_value !== (input_checked_value = /*selected*/ ctx[0] === /*si*/ ctx[4])) {
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
+
+    			if (dirty & /*selected*/ 1 && input_checked_value !== (input_checked_value = /*selected*/ ctx[0] === /*i*/ ctx[5] + 1)) {
     				prop_dev(input, "checked", input_checked_value);
     			}
     		},
@@ -1383,7 +1388,7 @@ var app = (function () {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(16:0) {#each selectInputs as si }",
+    		source: "(16:0) {#each Array(ratingCount) as _, i (i)}",
     		ctx
     	});
 
@@ -1392,12 +1397,17 @@ var app = (function () {
 
     function create_fragment$5(ctx) {
     	let ul;
-    	let each_value = /*selectInputs*/ ctx[2];
-    	validate_each_argument(each_value);
     	let each_blocks = [];
+    	let each_1_lookup = new Map();
+    	let each_value = Array(ratingCount);
+    	validate_each_argument(each_value);
+    	const get_key = ctx => /*i*/ ctx[5];
+    	validate_each_keys(ctx, each_value, get_each_context$1, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    		let child_ctx = get_each_context$1(ctx, each_value, i);
+    		let key = get_key(child_ctx);
+    		each_1_lookup.set(key, each_blocks[i] = create_each_block$1(key, child_ctx));
     	}
 
     	const block = {
@@ -1409,7 +1419,7 @@ var app = (function () {
     			}
 
     			attr_dev(ul, "class", "rating svelte-1ua1t9j");
-    			add_location(ul, file$5, 14, 0, 296);
+    			add_location(ul, file$5, 14, 0, 268);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1424,35 +1434,21 @@ var app = (function () {
     			}
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*selectInputs, selected, onChange*/ 7) {
-    				each_value = /*selectInputs*/ ctx[2];
+    			if (dirty & /*Array, ratingCount, selected, onChange*/ 3) {
+    				each_value = Array(ratingCount);
     				validate_each_argument(each_value);
-    				let i;
-
-    				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$1(ctx, each_value, i);
-
-    					if (each_blocks[i]) {
-    						each_blocks[i].p(child_ctx, dirty);
-    					} else {
-    						each_blocks[i] = create_each_block$1(child_ctx);
-    						each_blocks[i].c();
-    						each_blocks[i].m(ul, null);
-    					}
-    				}
-
-    				for (; i < each_blocks.length; i += 1) {
-    					each_blocks[i].d(1);
-    				}
-
-    				each_blocks.length = each_value.length;
+    				validate_each_keys(ctx, each_value, get_each_context$1, get_key);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, ul, destroy_block, create_each_block$1, null, get_each_context$1);
     			}
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(ul);
-    			destroy_each(each_blocks, detaching);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].d();
+    			}
     		}
     	};
 
@@ -1467,6 +1463,8 @@ var app = (function () {
     	return block;
     }
 
+    const ratingCount = 10;
+
     function instance$5($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('RatingSelect', slots, []);
@@ -1478,7 +1476,6 @@ var app = (function () {
     		dispatch('rating-select', selected);
     	};
 
-    	let selectInputs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
@@ -1490,19 +1487,18 @@ var app = (function () {
     		selected,
     		dispatch,
     		onChange,
-    		selectInputs
+    		ratingCount
     	});
 
     	$$self.$inject_state = $$props => {
     		if ('selected' in $$props) $$invalidate(0, selected = $$props.selected);
-    		if ('selectInputs' in $$props) $$invalidate(2, selectInputs = $$props.selectInputs);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [selected, onChange, selectInputs];
+    	return [selected, onChange];
     }
 
     class RatingSelect extends SvelteComponentDev {

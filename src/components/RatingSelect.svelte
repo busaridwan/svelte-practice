@@ -9,14 +9,14 @@
     selected = e.currentTarget.value
     dispatch('rating-select', selected)
   }
-  let selectInputs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const ratingCount = 10;
 </script>
 
 <ul class="rating">
-{#each selectInputs as si }
+{#each Array(ratingCount) as _, i (i)}
 <li>
-  <input type="radio" id="num{si}" name="rating" value={si} on:change={onChange} checked={selected===si} />
-  <label for="num{si}">{si}</label>
+  <input type="radio" id="num{i + 1}" name="rating" value={i + 1} on:change={onChange} checked={selected===i + 1} />
+  <label for="num{i + 1}">{i + 1}</label>
 </li>
 {/each}
   <!-- <li>
